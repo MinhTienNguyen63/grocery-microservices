@@ -1,8 +1,8 @@
-# cart_service.py
-
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import requests
+import pickle
+from sqlalchemy.types import PickleType
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///carts.sqlite'
@@ -12,11 +12,23 @@ db = SQLAlchemy(app)
 PRODUCT_SERVICE_URL = 'http://127.0.0.1:5000/products/'
 
 
+# Create a new CustomPickleType that uses a fixed protocol.
+class CustomPickleType(PickleType):
+    def __init__(self, protocol=4, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.protocol = protocol
+
+    def _serialize(self, value):
+        if value is None:
+            return None
+        return pickle.dumps(value, protocol=self.protocol)
+
+
 # Cart Model
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String, unique=True, nullable=False)
-    items = db.Column(db.PickleType, nullable=False, default={})
+    items = db.Column(CustomPickleType, nullable=False, default={})
 
     def get_total_price(self):
         total = 0
@@ -93,4 +105,4 @@ def remove_from_cart(user_id, product_id):
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(host='0.0.0.0',port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)

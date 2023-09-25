@@ -88,11 +88,9 @@ def remove_from_cart(user_id, product_id):
     return jsonify({
         "message": "Removed from cart",
         "remaining_quantity": cart.items.get(product_id, 0)
-    if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=False)
     })
 
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(port=5001, debug=True)
+    app.run(host='0.0.0.0',port=5001, debug=True)
